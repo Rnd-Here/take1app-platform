@@ -33,13 +33,13 @@ The application needs your Firebase credentials.
 #### For Local Development (Build from source)
 Use this if you want to test code changes locally on your machine.
 ```bash
-docker-compose -f docker-compose-dev.yml up --build
+docker compose -f docker-compose-dev.yml up --build
 ```
 
 #### For Production-like Testing (Using Registry Image)
 Use this if you want to test the exact image that will be deployed to the VPS.
 ```bash
-docker-compose up
+docker compose up
 ```
 
 *   The application will be available at: `http://localhost:8080`

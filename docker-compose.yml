@@ -17,6 +17,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - takeone-network
     restart: unless-stopped
       # volumes:
       # Mount the firebase config if it exists locally in the root (Optional for local testing with file)
@@ -35,6 +37,8 @@ services:
       retries: 10
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - takeone-network
     restart: unless-stopped
 
   redis:
@@ -46,7 +50,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - takeone-network
     restart: unless-stopped
 
 volumes:
   mysql_data:
+
+networks:
+  takeone-network:
+    driver: bridge

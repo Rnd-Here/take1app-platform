@@ -17,6 +17,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - takeone-network
     restart: unless-stopped
 
   mysql:
@@ -33,6 +35,8 @@ services:
       retries: 10
     volumes:
       - mysql_dev_data:/var/lib/mysql
+    networks:
+      - takeone-network
 
   redis:
     image: redis:alpine
@@ -44,7 +48,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - takeone-network
 
 volumes:
   mysql_dev_data:
 
+networks:
+  takeone-network:
+    driver: bridge

@@ -142,10 +142,18 @@ jobs:
               mysql_data:
             EOF
 
+            # Detect if 'docker compose' or 'docker-compose' is available
+            if docker compose version > /dev/null 2>&1; then
+              COMPOSE_CMD="docker compose"
+            else
+              COMPOSE_CMD="docker-compose"
+            fi
+            echo "Using compose command: $COMPOSE_CMD"
+
             echo "Pulling latest images from GHCR..."
-            docker-compose pull
+            $COMPOSE_CMD pull
 
             echo "Restarting containers..."
-            docker-compose up -d
+            $COMPOSE_CMD up -d
 
             echo "Deployment finished successfully!"
