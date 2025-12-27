@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.takeone</groupId>
-    <artifactId>backend</artifactId>
+    <artifactId>take-one-app-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>take-one-app-backend</name>
     <description>Back-end Spring Boot application for Artist Portfolio</description>
@@ -71,6 +71,14 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-mysql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
 
         <dependency>
