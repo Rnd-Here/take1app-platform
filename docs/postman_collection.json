@@ -1,24 +1,25 @@
 {
 	"info": {
 		"_postman_id": "take-one-app-backend-collection",
-		"name": "Artist Backend API",
+		"name": "Take One App Backend API",
 		"description": "Collection to test the Artist Backend Application endpoints.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Auth",
+			"name": "Firebase Phone Auth (Test User)",
 			"item": [
 				{
-					"name": "Exchange Token",
+					"name": "1. Get Verification Info",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
 									"var jsonData = pm.response.json();",
-									"if (jsonData.sessionToken) {",
-									"    pm.environment.set(\"session_token\", jsonData.sessionToken);",
+									"if (jsonData.sessionInfo) {",
+									"    pm.collectionVariables.set(\"firebase_session_info\", jsonData.sessionInfo);",
+									"    console.log(\"Firebase session info captured.\");",
 									"}"
 								],
 								"type": "text/javascript"
@@ -27,221 +28,385 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"token\": \"{{firebase_id_token}}\"\n}"
+							"raw": "{\n  \"phoneNumber\": \"+917639950611\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
-							"raw": "{{base_url}}/api/auth/token",
+							"raw": "https://identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key={{firebase_web_api_key}}",
+							"protocol": "https",
 							"host": [
-								"{{base_url}}"
+								"identitytoolkit",
+								"googleapis",
+								"com"
 							],
 							"path": [
-								"api",
-								"auth",
-								"token"
+								"v1",
+								"accounts:sendVerificationCode"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{firebase_web_api_key}}"
+								}
 							]
 						},
-						"description": "Exchanges a Firebase ID Token for a Session Token. Sets 'session_token' env variable on success."
+						"description": "Starts the phone number sign-in process to get a sessionInfo token. For this to work without a real reCAPTCHA token, your Firebase project must have this phone number configured for testing."
 					},
 					"response": []
 				},
 				{
-					"name": "Validate / Refresh Token",
+					"name": "2. Sign In With Phone & OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.idToken) {",
+									"    pm.collectionVariables.set(\"firebase_id_token\", jsonData.idToken);",
+									"    console.log(\"Firebase ID Token has been set successfully!\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{session_token}}"
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sessionInfo\": \"{{firebase_session_info}}\",\n  \"code\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
 							}
-						],
+						},
 						"url": {
-							"raw": "{{base_url}}/api/auth/refresh",
+							"raw": "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key={{firebase_web_api_key}}",
+							"protocol": "https",
 							"host": [
-								"{{base_url}}"
+								"identitytoolkit",
+								"googleapis",
+								"com"
 							],
 							"path": [
-								"api",
-								"auth",
-								"refresh"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Active Sessions",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{session_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/api/auth/sessions",
-							"host": [
-								"{{base_url}}"
+								"v1",
+								"accounts:signInWithPhoneNumber"
 							],
-							"path": [
-								"api",
-								"auth",
-								"sessions"
+							"query": [
+								{
+									"key": "key",
+									"value": "{{firebase_web_api_key}}"
+								}
 							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Logout",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{session_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/api/auth/logout",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"auth",
-								"logout"
-							]
-						}
+						},
+						"description": "Takes the sessionInfo from the previous step and the pre-configured OTP (123456) to sign in and get a Firebase ID Token. This token is then saved to the `firebase_id_token` variable."
 					},
 					"response": []
 				}
 			]
 		},
 		{
-			"name": "User Profile",
+			"name": "Take One App API",
 			"item": [
 				{
-					"name": "Get Profile",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{session_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/api/user/profile",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"user",
-								"profile"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Check Username",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/user/username/check?username=testuser",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"user",
-								"username",
-								"check"
-							],
-							"query": [
+					"name": "Auth",
+					"item": [
+						{
+							"name": "Exchange Token",
+							"event": [
 								{
-									"key": "username",
-									"value": "testuser"
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();",
+											"if (jsonData.sessionToken) {",
+											"    pm.collectionVariables.set(\"session_token\", jsonData.sessionToken);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
 								}
-							]
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"token\": \"{{firebase_id_token}}\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/auth/token",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"token"
+									]
+								},
+								"description": "Exchanges a Firebase ID Token for a Session Token. Sets 'session_token' collection variable on success."
+							},
+							"response": []
+						},
+						{
+							"name": "Validate Session",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{session_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/auth/validate",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"validate"
+									]
+								},
+								"description": "Validates the current session token and returns the full user object on success."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Active Sessions",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{session_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/auth/sessions",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"sessions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Logout",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{session_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/auth/logout",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"logout"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Logout All Devices",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{session_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/auth/logout-all",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"logout-all"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Revoke Session by ID",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{session_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/auth/sessions/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"sessions",
+										"1"
+									]
+								},
+								"description": "Revokes a specific session by its ID. Get the ID from the 'Get Active Sessions' endpoint."
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "Create Profile",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{session_token}}"
+					"name": "User Profile",
+					"item": [
+						{
+							"name": "Get Profile",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{session_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/user/profile",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"user",
+										"profile"
+									]
+								}
 							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"firstName\": \"Artist\",\n    \"lastName\": \"One\",\n    \"dob\": \"1990-01-01\",\n    \"username\": \"newartist\",\n    \"mobile\": \"+1234567890\",\n    \"company\": \"Art Studio\",\n    \"location\": \"New York\",\n    \"accountType\": \"CREATOR\"\n}"
+							"response": []
 						},
-						"url": {
-							"raw": "{{base_url}}/api/user/profile",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"user",
-								"profile"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update Profile",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{session_token}}"
+						{
+							"name": "Check Username",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/user/username/check?username=testuser",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"user",
+										"username",
+										"check"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": "testuser"
+										}
+									]
+								}
 							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"firstName\": \"Artist Updated\",\n    \"lastName\": \"One\",\n    \"location\": \"Los Angeles\",\n    \"isPortfolioCreated\": true\n}"
+							"response": []
 						},
-						"url": {
-							"raw": "{{base_url}}/api/user/profile",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"user",
-								"profile"
-							]
+						{
+							"name": "Create Profile",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{session_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"firstName\": \"Artist\",\n    \"lastName\": \"One\",\n    \"dob\": \"1990-01-01\",\n    \"username\": \"newartist\",\n    \"mobile\": \"+1234567890\",\n    \"company\": \"Art Studio\",\n    \"location\": \"New York\",\n    \"accountType\": \"CREATOR\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/user/profile",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"user",
+										"profile"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Profile",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{session_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"firstName\": \"Artist Updated\",\n    \"lastName\": \"One\",\n    \"dob\": \"1991-02-02\",\n    \"username\": \"newartist_updated\",\n    \"mobile\": \"+1987654321\",\n    \"company\": \"Art Studio Inc.\",\n    \"location\": \"Los Angeles\",\n    \"accountType\": \"CREATOR\",\n    \"isPortfolioCreated\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/user/profile",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"user",
+										"profile"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				}
 			]
 		}
@@ -253,8 +418,18 @@
 			"type": "string"
 		},
 		{
+			"key": "firebase_web_api_key",
+			"value": "PASTE_FIREBASE_WEB_API_KEY_HERE",
+			"type": "string"
+		},
+		{
 			"key": "firebase_id_token",
-			"value": "PASTE_FIREBASE_TOKEN_HERE",
+			"value": "will_be_set_automatically",
+			"type": "string"
+		},
+		{
+			"key": "firebase_session_info",
+			"value": "will_be_set_automatically",
 			"type": "string"
 		},
 		{

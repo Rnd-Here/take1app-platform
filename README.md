@@ -46,9 +46,20 @@ docker compose up
 *   **Database Management**: Flyway automatically handles schema migration on startup using scripts in `src/main/resources/db/migration`.
 
 ## 📚 API Documentation
+The Postman collection (`docs/postman_collection.json`) provides a comprehensive set of requests for testing the Take One App Backend API. To get started:
+
 1.  Import `docs/postman_collection.json` into Postman.
-2.  Set the `firebase_id_token` variable in the collection to a valid ID token.
-3.  **Key Endpoints**:
+2.  **Firebase Phone Auth Setup**:
+    *   **Test Phone Number**: The collection includes requests for Firebase Phone Auth using a test mobile number (`+917639950611`) and OTP (`123456`).
+    *   **Firebase Configuration**: For these requests to work, you *must* configure the test phone number (`+917639950611`) in your Firebase project's Authentication settings under "Phone numbers for testing".
+    *   **Get Firebase ID Token**:
+        1.  Run the `1. Get Verification Info` request to obtain `sessionInfo`. This will automatically be saved to the `firebase_session_info` collection variable.
+        2.  Run the `2. Sign In With Phone & OTP` request. This will use the `sessionInfo` and the test OTP (`123456`) to sign in and save the resulting Firebase ID Token to the `firebase_id_token` collection variable. This token represents the Firebase UID.
+3.  **Backend Authentication**:
+    *   Once you have the `firebase_id_token`, run the `Exchange Token` request under `Take One App API > Auth`. This will exchange the Firebase ID Token for a `session_token` which is required for authenticating with the backend API. The `session_token` will be automatically saved to the `session_token` collection variable.
+    *   You can then use the `session_token` in subsequent backend API requests (e.g., `Validate Session`, `Get Profile`).
+
+**Key Endpoints**:
     - **Auth**: `/api/auth/token` (Login), `/api/auth/logout`
     - **Profile**: `/api/user/profile` (Get/Create/Update Creator Profiles)
 
