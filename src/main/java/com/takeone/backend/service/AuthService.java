@@ -147,7 +147,7 @@ public class AuthService {
     private String generateTemporaryUsername(String uid) {
         // Take first 8 characters of UID and prefix with 'user_'
         String shortUid = uid.length() > 8 ? uid.substring(0, 8) : uid;
-        return "user_" + shortUid.toLowerCase();
+        return "user_" + shortUid;
     }
 
     /**
