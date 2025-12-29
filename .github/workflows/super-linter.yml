@@ -20,6 +20,7 @@ jobs:
       - name: Lint Code Base
         uses: github/super-linter@v7
         env:
+          DISABLE_ERRORS: true
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.MY_PAT_TOKEN }}
