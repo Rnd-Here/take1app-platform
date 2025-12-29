@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -29,40 +30,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers(
-                                "/api/auth/token",
-                                "/api/auth/refresh",
-                                "/api/session/validate-session",
-                                "/actuator/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/ws-relay/**"))
+                // 1. Disable CSRF for the entire API
+                .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints - no authentication required
+                        // 2. Keep only truly PUBLIC endpoints here
                         .requestMatchers(
-                                "/api/auth/token",
-                                "/api/auth/refresh",
-                                "/api/session/validate-session",
+                                "/api/auth/**",      // Catch-all for token, refresh, etc.
                                 "/actuator/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/ws-relay/**")
                         .permitAll()
-
-                        // All other endpoints require authentication
+                        // 3. Everything else just needs a valid session/token
                         .anyRequest().authenticated())
-                .addFilterBefore(
-                        requestTraceFilter,
-                        UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(
-                        sessionAuthenticationFilter(),
-                        UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(requestTraceFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(sessionAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

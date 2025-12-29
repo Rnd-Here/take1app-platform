@@ -17,6 +17,8 @@ services:
       - REDIS_PORT=6379
       - FIREBASE_CONFIG_PATH=/app/firebase-service-account.json
       - APP_FIREBASE_CONFIG_BASE64=${FIREBASE_CONFIG_BASE64}
+      - SERVER_ADDRESS=0.0.0.0  # Tells Spring to listen globally inside the container
+      - SERVER_PORT=8080        # Confirms the port
     depends_on:
       mysql:
         condition: service_healthy
