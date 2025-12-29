@@ -1,171 +1,151 @@
 package com.takeone.backend.controller;
 
+import com.takeone.backend.dto.AuthRequest;
 import com.takeone.backend.dto.AuthResponse;
-import com.takeone.backend.dto.TokenRequest;
-import com.takeone.backend.model.Session;
-import com.takeone.backend.model.User;
-import com.takeone.backend.repository.UserRepository;
-import com.takeone.backend.service.FirebaseService;
+import com.takeone.backend.dto.RefreshTokenRequest;
+import com.takeone.backend.entity.Session;
+import com.takeone.backend.entity.User;
+import com.takeone.backend.service.AuthService;
 import com.takeone.backend.service.SessionService;
-import com.google.firebase.auth.FirebaseToken;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
-
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@Slf4j
 public class AuthController {
 
-    private final FirebaseService firebaseService;
+    private final AuthService authService;
     private final SessionService sessionService;
-    private final UserRepository userRepository;
 
+    /**
+     * Authenticate user with Firebase token
+     * 1. Validate Firebase token
+     * 2. Create or update user in database
+     * 3. Revoke all previous sessions
+     * 4. Create new session
+     * 5. Return session token and user details
+     */
     @PostMapping("/token")
-    public ResponseEntity<?> authenticate(@RequestBody @Valid TokenRequest request, HttpServletRequest httpRequest) {
+    public ResponseEntity<AuthResponse> authenticate(
+            @Valid @RequestBody AuthRequest request,
+            HttpServletRequest httpRequest
+    ) {
         try {
-            FirebaseToken decodedToken = firebaseService.verifyToken(request.getToken());
-            String uid = decodedToken.getUid();
-            String email = decodedToken.getEmail();
-            String mobile = (String) decodedToken.getClaims().get("phone_number");
-            String name = decodedToken.getName();
+            log.info("Authentication request received");
 
-            Optional<User> userOpt = userRepository.findByUid(uid);
-            User user;
+            // Authenticate and get/create user
+            User user = authService.authenticateWithFirebase(request);
 
-            if (userOpt.isPresent()) {
-                user = userOpt.get();
-                // Sync details. Trust Firebase token as source of truth.
-                // If the token has new info (e.g. from linkWithCredential), update our DB.
-                if (email != null && !email.equals(user.getEmail()))
-                    user.setEmail(email);
-                if (mobile != null && !mobile.equals(user.getMobile()))
-                    user.setMobile(mobile);
+            // Revoke all previous sessions for this user
+            sessionService.invalidateAllUserSessions(user.getId());
+            log.info("Revoked all previous sessions for user: {}", user.getUsername());
 
-                // Update verification status from claims
-                Boolean emailVerified = (Boolean) decodedToken.getClaims().get("email_verified");
-                if (emailVerified != null)
-                    user.setIsEmailVerified(emailVerified);
+            // Create new session
+            Session session = sessionService.createSession(user, httpRequest);
 
-                Boolean phoneVerified = (Boolean) decodedToken.getClaims().get("phone_number_verified");
-                if (phoneVerified != null) {
-                    user.setIsPhoneVerified(phoneVerified);
-                } else if (mobile != null) {
-                    // Fallback: assume verified if mobile number is present in Firebase token
-                    user.setIsPhoneVerified(true);
-                }
+            // Build response
+            AuthResponse response = AuthResponse.builder()
+                    .sessionToken(session.getRefreshToken())
+                    .expiresAt(session.getExpiresAt())
+                    .user(authService.buildUserResponse(user))
+                    .build();
 
-                // Update profile picture if present in token and not in DB (or overwrite?)
-                String picture = (String) decodedToken.getClaims().get("picture");
-                if (picture != null)
-                    user.setProfilePictureUrl(picture);
-
-                user.setLastLogin(java.time.LocalDateTime.now());
-                user = userRepository.save(user);
-            } else {
-                user = new User();
-                user.setUid(uid);
-                user.setEmail(email);
-                user.setMobile(mobile);
-                // Split name into first/last if possible, or just set display name
-                if (name != null) {
-                    user.setDisplayName(name); // Use display name for the full name from provider
-                    // Simple split attempt for first/last
-                    String[] parts = name.split(" ", 2);
-                    if (parts.length > 0)
-                        user.setFirstName(parts[0]);
-                    if (parts.length > 1)
-                        user.setLastName(parts[1]);
-                }
-
-                Boolean emailVerified = (Boolean) decodedToken.getClaims().get("email_verified");
-                if (emailVerified != null)
-                    user.setIsEmailVerified(emailVerified);
-                if (mobile != null)
-                    user.setIsPhoneVerified(true);
-
-                String picture = (String) decodedToken.getClaims().get("picture");
-                if (picture != null)
-                    user.setProfilePictureUrl(picture);
-
-                user.setLastLogin(java.time.LocalDateTime.now());
-                user = userRepository.save(user);
-            }
-
-            Session session = sessionService.createSession(user, httpRequest.getRemoteAddr(),
-                    httpRequest.getHeader("User-Agent"));
-
-            AuthResponse response = new AuthResponse();
-            response.setSessionToken(session.getRefreshToken());
-            response.setUser(user);
-
+            log.info("User authenticated successfully: {}", user.getUsername());
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            log.error("Authentication failed: {}", e.getMessage());
-            return ResponseEntity.status(401).body("Invalid Token");
+            log.error("Authentication failed: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(AuthResponse.builder()
+                            .error("Authentication failed: " + e.getMessage())
+                            .build());
         }
     }
 
+    /**
+     * Refresh session token
+     * Extends session expiry and returns new token
+     */
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(@RequestHeader("Authorization") String token) {
-        // Implementation for simple refresh if we were using short-lived access tokens.
-        // Since we use the session token (refreshToken) as the main auth token,
-        // this might just validate it or issue a new one (rotation).
-        // For now, simple validation.
-        if (token != null && token.startsWith("Bearer ")) {
-            String sessionToken = token.substring(7);
-            Optional<Session> session = sessionService.findByRefreshToken(sessionToken);
-            if (session.isPresent() && sessionService.isSessionValid(session.get())) {
-                return ResponseEntity.ok("Token is valid");
+    public ResponseEntity<AuthResponse> refreshToken(
+            @Valid @RequestBody RefreshTokenRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        try {
+            log.info("Token refresh request received");
+
+            Session session = sessionService.refreshSession(request.getRefreshToken(), httpRequest);
+
+            if (session == null) {
+                log.warn("Invalid or expired refresh token");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(AuthResponse.builder()
+                                .error("Invalid or expired session")
+                                .build());
             }
+
+            AuthResponse response = AuthResponse.builder()
+                    .sessionToken(session.getRefreshToken())
+                    .expiresAt(session.getExpiresAt())
+                    .user(authService.buildUserResponse(session.getUser()))
+                    .build();
+
+            log.info("Token refreshed successfully for user: {}", session.getUser().getUsername());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Token refresh failed: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(AuthResponse.builder()
+                            .error("Token refresh failed: " + e.getMessage())
+                            .build());
         }
-        return ResponseEntity.status(401).body("Invalid Token");
     }
 
+    /**
+     * Logout current session
+     * Invalidates the session token
+     */
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
-        if (token != null && token.startsWith("Bearer ")) {
-            String sessionToken = token.substring(7);
-            sessionService.revokeSession(sessionToken);
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = extractToken(authHeader);
+
+            if (token == null) {
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse("Invalid authorization header"));
+            }
+
+            sessionService.invalidateSession(token);
+            log.info("User logged out successfully");
+
+            return ResponseEntity.ok(new MessageResponse("Logged out successfully"));
+
+        } catch (Exception e) {
+            log.error("Logout failed: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Logout failed: " + e.getMessage()));
         }
-        return ResponseEntity.ok("Logged out");
     }
 
-    @PostMapping("/logout-all")
-    public ResponseEntity<?> logoutAll(@AuthenticationPrincipal User user) {
-        if (user != null) {
-            sessionService.revokeAllUserSessions(user);
-            return ResponseEntity.ok("Logged out all devices");
+    private String extractToken(String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
         }
-        return ResponseEntity.status(401).build();
+        return null;
     }
 
-    @GetMapping("/sessions")
-    public ResponseEntity<?> getSessions(@AuthenticationPrincipal User user) {
-        List<Session> sessions = sessionService.getActiveSessions(user);
-        return ResponseEntity.ok(sessions);
+    // Simple response classes
+    record MessageResponse(String message) {
     }
 
-    @DeleteMapping("/sessions/{id}")
-    public ResponseEntity<?> revokeSession(@PathVariable Long id, @AuthenticationPrincipal User user) {
-        sessionService.revokeSessionById(id, user.getId());
-        return ResponseEntity.ok("Session revoked");
-    }
-
-    @GetMapping("/validate")
-    public ResponseEntity<?> validateToken(@AuthenticationPrincipal User user) {
-        if (user != null) {
-            return ResponseEntity.ok(user);
-        }
-        return ResponseEntity.status(401).build();
+    record ErrorResponse(String error) {
     }
 }

@@ -143,6 +143,10 @@
 									{
 										"key": "Content-Type",
 										"value": "application/json"
+									},
+									{
+										"key": "X-Trace-Id",
+										"value": "{{trace_id}}"
 									}
 								],
 								"body": {
@@ -165,49 +169,32 @@
 							"response": []
 						},
 						{
-							"name": "Validate Session",
+							"name": "Refresh Token",
 							"request": {
-								"method": "GET",
+								"method": "POST",
 								"header": [
 									{
-										"key": "Authorization",
-										"value": "Bearer {{session_token}}"
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Trace-Id",
+										"value": "{{trace_id}}"
 									}
 								],
-								"url": {
-									"raw": "{{base_url}}/api/auth/validate",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"auth",
-										"validate"
-									]
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"refreshToken\": \"{{session_token}}\"\n}"
 								},
-								"description": "Validates the current session token and returns the full user object on success."
-							},
-							"response": []
-						},
-						{
-							"name": "Get Active Sessions",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{session_token}}"
-									}
-								],
 								"url": {
-									"raw": "{{base_url}}/api/auth/sessions",
+									"raw": "{{base_url}}/api/auth/refresh",
 									"host": [
 										"{{base_url}}"
 									],
 									"path": [
 										"api",
 										"auth",
-										"sessions"
+										"refresh"
 									]
 								}
 							},
@@ -221,6 +208,10 @@
 									{
 										"key": "Authorization",
 										"value": "Bearer {{session_token}}"
+									},
+									{
+										"key": "X-Trace-Id",
+										"value": "{{trace_id}}"
 									}
 								],
 								"url": {
@@ -236,54 +227,66 @@
 								}
 							},
 							"response": []
-						},
+						}
+					]
+				},
+				{
+					"name": "Session Management",
+					"item": [
 						{
-							"name": "Logout All Devices",
+							"name": "Validate Session",
 							"request": {
 								"method": "POST",
 								"header": [
 									{
 										"key": "Authorization",
 										"value": "Bearer {{session_token}}"
+									},
+									{
+										"key": "X-Trace-Id",
+										"value": "{{trace_id}}"
 									}
 								],
 								"url": {
-									"raw": "{{base_url}}/api/auth/logout-all",
+									"raw": "{{base_url}}/api/session/validate-session",
 									"host": [
 										"{{base_url}}"
 									],
 									"path": [
 										"api",
-										"auth",
-										"logout-all"
+										"session",
+										"validate-session"
 									]
-								}
+								},
+								"description": "Validates the current session token."
 							},
 							"response": []
 						},
 						{
-							"name": "Revoke Session by ID",
+							"name": "Get Session Info",
 							"request": {
-								"method": "DELETE",
+								"method": "GET",
 								"header": [
 									{
 										"key": "Authorization",
 										"value": "Bearer {{session_token}}"
+									},
+									{
+										"key": "X-Trace-Id",
+										"value": "{{trace_id}}"
 									}
 								],
 								"url": {
-									"raw": "{{base_url}}/api/auth/sessions/1",
+									"raw": "{{base_url}}/api/session/session-info",
 									"host": [
 										"{{base_url}}"
 									],
 									"path": [
 										"api",
-										"auth",
-										"sessions",
-										"1"
+										"session",
+										"session-info"
 									]
-								},
-								"description": "Revokes a specific session by its ID. Get the ID from the 'Get Active Sessions' endpoint."
+								}
 							},
 							"response": []
 						}
@@ -300,6 +303,10 @@
 									{
 										"key": "Authorization",
 										"value": "Bearer {{session_token}}"
+									},
+									{
+										"key": "X-Trace-Id",
+										"value": "{{trace_id}}"
 									}
 								],
 								"url": {
@@ -319,24 +326,34 @@
 						{
 							"name": "Check Username",
 							"request": {
-								"method": "GET",
-								"header": [],
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{session_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Trace-Id",
+										"value": "{{trace_id}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"testuser\"\n}"
+								},
 								"url": {
-									"raw": "{{base_url}}/api/user/username/check?username=testuser",
+									"raw": "{{base_url}}/api/user/check-username",
 									"host": [
 										"{{base_url}}"
 									],
 									"path": [
 										"api",
 										"user",
-										"username",
-										"check"
-									],
-									"query": [
-										{
-											"key": "username",
-											"value": "testuser"
-										}
+										"check-username"
 									]
 								}
 							},
@@ -354,11 +371,15 @@
 									{
 										"key": "Content-Type",
 										"value": "application/json"
+									},
+									{
+										"key": "X-Trace-Id",
+										"value": "{{trace_id}}"
 									}
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"firstName\": \"Artist\",\n    \"lastName\": \"One\",\n    \"dob\": \"1990-01-01\",\n    \"username\": \"newartist\",\n    \"mobile\": \"+1234567890\",\n    \"company\": \"Art Studio\",\n    \"location\": \"New York\",\n    \"accountType\": \"CREATOR\"\n}"
+									"raw": "{\n    \"firstName\": \"Artist\",\n    \"lastName\": \"One\",\n    \"dob\": \"1990-01-01\",\n    \"username\": \"newartist\",\n    \"displayName\": \"Artist One\",\n    \"company\": \"Art Studio\",\n    \"location\": \"New York\",\n    \"accountType\": \"CREATOR\"\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/api/user/profile",
@@ -386,11 +407,15 @@
 									{
 										"key": "Content-Type",
 										"value": "application/json"
+									},
+									{
+										"key": "X-Trace-Id",
+										"value": "{{trace_id}}"
 									}
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"firstName\": \"Artist Updated\",\n    \"lastName\": \"One\",\n    \"dob\": \"1991-02-02\",\n    \"username\": \"newartist_updated\",\n    \"mobile\": \"+1987654321\",\n    \"company\": \"Art Studio Inc.\",\n    \"location\": \"Los Angeles\",\n    \"accountType\": \"CREATOR\",\n    \"isPortfolioCreated\": true\n}"
+									"raw": "{\n    \"firstName\": \"Artist Updated\",\n    \"lastName\": \"One\",\n    \"dob\": \"1991-02-02\",\n    \"username\": \"newartist_updated\",\n    \"displayName\": \"Artist One Updated\",\n    \"company\": \"Art Studio Inc.\",\n    \"location\": \"Los Angeles\",\n    \"accountType\": \"CREATOR\",\n    \"isPortfolioCreated\": true\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/api/user/profile",
@@ -403,6 +428,118 @@
 										"profile"
 									]
 								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Monitoring",
+					"item": [
+						{
+							"name": "Prometheus Metrics",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/actuator/prometheus",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"actuator",
+										"prometheus"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Health Check",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/actuator/health",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"actuator",
+										"health"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Notifications",
+					"item": [
+						{
+							"name": "Register FCM Token",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{session_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Trace-Id",
+										"value": "{{trace_id}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"fcmToken\": \"MOCK_FCM_TOKEN_HERE\",\n    \"deviceId\": \"mobile_test_device_001\",\n    \"platform\": \"ANDROID\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/notifications/fcm-token",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"notifications",
+										"fcm-token"
+									]
+								},
+								"description": "Registers or updates the FCM push notification token for the current device and user. Upserts if device already exists."
+							},
+							"response": []
+						},
+						{
+							"name": "Send Test Push",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{session_token}}"
+									},
+									{
+										"key": "X-Trace-Id",
+										"value": "{{trace_id}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/notifications/test-push",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"notifications",
+										"test-push"
+									]
+								},
+								"description": "Triggers a test push notification to all active devices of the current user via FCM."
 							},
 							"response": []
 						}
@@ -435,6 +572,11 @@
 		{
 			"key": "session_token",
 			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "trace_id",
+			"value": "postman-test-uuid",
 			"type": "string"
 		}
 	]

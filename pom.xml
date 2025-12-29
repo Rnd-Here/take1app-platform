@@ -91,7 +91,30 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.splunk.logging</groupId>
+            <artifactId>splunk-library-javalogging</artifactId>
+            <version>1.11.8</version>
+        </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>splunk-artifactory</id>
+            <name>Splunk Releases</name>
+            <url>https://splunk.jfrog.io/splunk/ext-releases-local</url>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>

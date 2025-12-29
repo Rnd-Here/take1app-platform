@@ -1,9 +1,16 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     container_name: take1_backend_app_dev
     ports:
       - "8080:8080"
+    volumes:
+      - ./src:/app/src
+      - ./pom.xml:/app/pom.xml
+      - ~/.m2:/root/.m2 # Cache local maven repo
+    command: mvn spring-boot:run
     environment:
       - DB_URL=jdbc:mysql://mysql:3306/take1app?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       - DB_USERNAME=root
@@ -20,6 +27,13 @@ services:
     networks:
       - takeone-network
     restart: unless-stopped
+    develop:
+      watch:
+        - path: ./src
+          action: sync+restart
+          target: /app/src
+        - path: ./pom.xml
+          action: rebuild
 
   mysql:
     image: mysql:8.0

@@ -1,0 +1,35 @@
+name: "Super Linter"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint:
+    name: Lint Code Base
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Lint Code Base
+        uses: github/super-linter@v7
+        env:
+          DISABLE_ERRORS: true
+          VALIDATE_ALL_CODEBASE: false
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.MY_PAT_TOKEN }}
+          ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: true
+          JAVA_CHECKSTYLE_CONFIG_FILE: sun_checks.xml
+          # Disable some linters that might be too noisy initially
+          VALIDATE_JAVA: true
+          VALIDATE_PROPERTIES: true
+          VALIDATE_XML: true
+          VALIDATE_MARKDOWN: true
+          VALIDATE_DOCKERFILE: true
+          VALIDATE_YAML: true

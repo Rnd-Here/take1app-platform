@@ -1,107 +1,207 @@
 package com.takeone.backend.service;
 
-import com.takeone.backend.model.AccountType;
-import com.takeone.backend.model.User;
+import com.takeone.backend.dto.UserProfileRequest;
+import com.takeone.backend.dto.UserProfileResponse;
+import com.takeone.backend.entity.User;
 import com.takeone.backend.repository.UserRepository;
+import com.takeone.backend.util.HashUtil;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.concurrent.TimeUnit;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserProfileService {
 
     private final UserRepository userRepository;
-    private final StringRedisTemplate redisTemplate;
-    private static final String USERNAME_HASH_PREFIX = "username:hash:";
+    private final UsernameService usernameService;
 
-    public User createProfile(User user, String firstName, String lastName, String dob, String username, String mobile,
-            String company, String location, AccountType accountType) {
-        if (!isUsernameAvailable(username)) {
-            throw new IllegalArgumentException("Username is already taken");
+    private static @NonNull String getNormalizedUsername(String username) {
+        String normalizedUsername = username.toLowerCase().trim();
+
+        // Check length
+        if (normalizedUsername.length() < 3 || normalizedUsername.length() > 50) {
+            throw new IllegalArgumentException("Username must be between 3 and 50 characters");
         }
 
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
-        user.setDob(dob);
-        user.setUsername(username);
-        user.setUsernameHash(org.apache.commons.codec.digest.DigestUtils.sha256Hex(username));
+        // Check format (alphanumeric and underscore only)
+        if (!normalizedUsername.matches("^[a-z0-9_]+$")) {
+            throw new IllegalArgumentException("Username can only contain lowercase letters, numbers, and underscores");
+        }
+        return normalizedUsername;
+    }
 
-        user.setMobile(mobile);
-        user.setCompany(company);
-        user.setLocation(location);
-        user.setAccountType(accountType);
+    /**
+     * Get user profile with Redis caching
+     * Cache key: "profiles::userId"
+     */
+    @Cacheable(value = "profiles", key = "#userId")
+    @Transactional(readOnly = true)
+    public UserProfileResponse getUserProfile(Long userId) {
+        log.info("Fetching profile for userId: {}", userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return buildProfileResponse(user);
+    }
+
+    /**
+     * Create user profile (first time setup)
+     * Validates username uniqueness and sets profile data
+     */
+    @CacheEvict(value = "profiles", key = "#userId")
+    @Transactional
+    public UserProfileResponse createUserProfile(Long userId, UserProfileRequest request) {
+        log.info("Creating profile for userId: {}", userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Check if profile already created
+        if (user.getIsPortfolioCreated()) {
+            throw new IllegalArgumentException("Profile already created. Use PUT to update.");
+        }
+
+        // Validate and set username
+        if (request.getUsername() != null && !request.getUsername().isEmpty()) {
+            validateAndSetUsername(user, request.getUsername());
+        }
+
+        // Set profile fields
+        updateUserFields(user, request);
+
+        // portfolio field remains false unless User starts creating portfolio
         user.setIsPortfolioCreated(false);
 
         User savedUser = userRepository.save(user);
-        cacheUsernameHash(savedUser.getUsernameHash(), savedUser.getUid());
-        return savedUser;
+
+        // Invalidate username cache
+        if (request.getUsername() != null) {
+            usernameService.invalidateUsernameCache(request.getUsername());
+        }
+
+        log.info("Profile created successfully for userId: {}", userId);
+        return buildProfileResponse(savedUser);
     }
 
-    public User updateProfile(User user, String firstName, String lastName, String dob, String username, String mobile,
-            String company, String location, AccountType accountType,
-            Boolean isPortfolioCreated) {
-        if (username != null && !username.equals(user.getUsername())) {
-            if (!isUsernameAvailable(username)) {
-                throw new IllegalArgumentException("Username is already taken");
+    /**
+     * Update user profile
+     * Allows updating existing profile information
+     */
+    @CacheEvict(value = "profiles", key = "#userId")
+    @Transactional
+    public UserProfileResponse updateUserProfile(Long userId, UserProfileRequest request) {
+        log.info("Updating profile for userId: {}", userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // If username is being changed, validate it
+        if (request.getUsername() != null &&
+                !request.getUsername().equals(user.getUsername())) {
+            String oldUsername = user.getUsername();
+            validateAndSetUsername(user, request.getUsername());
+
+            // Invalidate both old and new username caches
+            if (oldUsername != null) {
+                usernameService.invalidateUsernameCache(oldUsername);
             }
-            user.setUsername(username);
-            user.setUsernameHash(org.apache.commons.codec.digest.DigestUtils.sha256Hex(username));
-            cacheUsernameHash(user.getUsernameHash(), user.getUid());
+            usernameService.invalidateUsernameCache(request.getUsername());
         }
 
-        if (firstName != null)
-            user.setFirstName(firstName);
-        if (lastName != null)
-            user.setLastName(lastName);
-        if (dob != null)
-            user.setDob(dob);
-        if (mobile != null)
-            user.setMobile(mobile);
-        if (company != null)
-            user.setCompany(company);
-        if (location != null)
-            user.setLocation(location);
-        if (accountType != null)
-            user.setAccountType(accountType);
-        if (isPortfolioCreated != null && user.getAccountType() == AccountType.CREATOR) {
-            user.setIsPortfolioCreated(isPortfolioCreated);
-        }
+        // Update profile fields
+        updateUserFields(user, request);
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        log.info("Profile updated successfully for userId: {}", userId);
+        return buildProfileResponse(savedUser);
     }
 
-    public boolean isUsernameAvailable(String username) {
-        if (username == null || username.trim().isEmpty())
-            return false;
+    /**
+     * Validate username and set it with hash
+     */
+    private void validateAndSetUsername(User user, String username) {
+        // Normalize username
+        String normalizedUsername = getNormalizedUsername(username);
 
-        String hash = DigestUtils.sha256Hex(username);
-        String key = USERNAME_HASH_PREFIX + hash;
-
-        // Check Redis
-        Boolean needsCheck = redisTemplate.hasKey(key);
-        if (needsCheck) {
-            return false; // Taken
+        // Check availability
+        if (!usernameService.isUsernameAvailable(normalizedUsername)) {
+            throw new IllegalArgumentException("Username is already taken");
         }
 
-        // Check DB
-        // Fetch the user so we can cache the mapping (Hash -> UID)
-        var userOpt = userRepository.findByUsernameHash(hash);
-        if (userOpt.isPresent()) {
-            cacheUsernameHash(hash, userOpt.get().getUid());
-            return false;
-        }
-
-        return true;
+        // Set username and hash
+        user.setUsername(normalizedUsername);
+        user.setUsernameHash(HashUtil.sha256(normalizedUsername));
     }
 
-    private void cacheUsernameHash(String hash, String uid) {
-        String key = USERNAME_HASH_PREFIX + hash;
-        // Store in Redis with TTL (LRU approximation by expiration/eviction)
-        // Store for 7 days
-        redisTemplate.opsForValue().set(key, uid, 7, TimeUnit.DAYS);
+    /**
+     * Update user fields from request
+     */
+    private void updateUserFields(User user, UserProfileRequest request) {
+        if (request.getFirstName() != null) {
+            user.setFirstName(request.getFirstName());
+        }
+
+        if (request.getLastName() != null) {
+            user.setLastName(request.getLastName());
+        }
+
+        if (request.getDisplayName() != null) {
+            user.setDisplayName(request.getDisplayName());
+        }
+
+        if (request.getDob() != null) {
+            user.setDob(request.getDob());
+        }
+
+        if (request.getCompany() != null) {
+            user.setCompany(request.getCompany());
+        }
+
+        if (request.getLocation() != null) {
+            user.setLocation(request.getLocation());
+        }
+
+        if (request.getProfilePictureUrl() != null) {
+            user.setProfilePictureUrl(request.getProfilePictureUrl());
+        }
+
+        if (request.getAccountType() != null) {
+            user.setAccountType(request.getAccountType());
+        }
+    }
+
+    /**
+     * Build profile response DTO
+     */
+    private UserProfileResponse buildProfileResponse(User user) {
+        return UserProfileResponse.builder()
+                .id(user.getId())
+                .uid(user.getUid())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .mobile(user.getMobile())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .displayName(user.getDisplayName())
+                .dob(user.getDob())
+                .company(user.getCompany())
+                .location(user.getLocation())
+                .profilePictureUrl(user.getProfilePictureUrl())
+                .accountType(user.getAccountType())
+                .isPortfolioCreated(user.getIsPortfolioCreated())
+                .isEmailVerified(user.getIsEmailVerified())
+                .isPhoneVerified(user.getIsPhoneVerified())
+                .isActive(user.getIsActive())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
     }
 }
