@@ -85,7 +85,7 @@ jobs:
             # Create/Update .env file
             echo "FIREBASE_CONFIG_BASE64=$FIREBASE_SECRET" > .env
             echo "IMAGE_NAME=$IMAGE_NAME" >> .env
-            echo "GRAFANA_LOKI_TOKEN = $GRAFANA_LOKI_SECRET" >> .env
+            echo "GRAFANA_LOKI_TOKEN = $GRAFANA_LOKI_SECRET" > .env
 
             echo "Updating docker-compose.yml..."
             # We need the docker-compose.yml on the server. 
