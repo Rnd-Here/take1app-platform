@@ -11,8 +11,8 @@ services:
       start_period: 40s
     environment:
       - DB_URL=jdbc:mysql://mysql:3306/take1app?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      - DB_USERNAME=root
-      - DB_PASSWORD=root
+      - DB_USERNAME=takeone_user
+      - DB_PASSWORD=takeone_password
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - FIREBASE_CONFIG_PATH=/app/firebase-service-account.json
@@ -39,6 +39,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: take1app
+      MYSQL_USER: takeone_user
+      MYSQL_PASSWORD: takeone_password
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       timeout: 20s
