@@ -1,9 +1,10 @@
 {
 	"info": {
-		"_postman_id": "take-one-app-backend-collection",
+		"_postman_id": "11fbff28-7040-4035-8386-266de17f7163",
 		"name": "Take One App Backend API",
 		"description": "Collection to test the Artist Backend Application endpoints.",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12899566"
 	},
 	"item": [
 		{
@@ -22,7 +23,9 @@
 									"    console.log(\"Firebase session info captured.\");",
 									"}"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -125,15 +128,29 @@
 							"name": "Exchange Token",
 							"event": [
 								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
 									"listen": "test",
 									"script": {
 										"exec": [
 											"var jsonData = pm.response.json();",
 											"if (jsonData.sessionToken) {",
 											"    pm.collectionVariables.set(\"session_token\", jsonData.sessionToken);",
-											"}"
+											"}",
+											""
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
 									}
 								}
 							],
@@ -151,7 +168,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"token\": \"{{firebase_id_token}}\"\n}"
+									"raw": "{\n    \"idToken\": \"{{firebase_id_token}}\"\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/api/auth/token",
@@ -343,7 +360,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"username\": \"testuser\"\n}"
+									"raw": "{\n    \"username\": \"user_12c9rpuz\"\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/api/user/check-username",
