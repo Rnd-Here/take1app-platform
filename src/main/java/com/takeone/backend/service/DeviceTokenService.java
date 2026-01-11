@@ -1,5 +1,6 @@
 package com.takeone.backend.service;
 
+import com.takeone.backend.dto.FCMTokenRequest;
 import com.takeone.backend.entity.DeviceToken;
 import com.takeone.backend.entity.User;
 import com.takeone.backend.repository.DeviceTokenRepository;
@@ -23,34 +24,45 @@ public class DeviceTokenService {
      * Register or update a device token (Upsert)
      */
     @Transactional
-    public void registerToken(Long userId, String fcmToken, String deviceId, String platform) {
-        log.info("Registering/Updating FCM token for user: {}, device: {}", userId, deviceId);
+    public void registerToken(Long userId, FCMTokenRequest request) {
+        log.info("Registering/Updating FCM token for user: {}, device: {}", userId, request.getDeviceId());
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        Optional<DeviceToken> existingToken = deviceTokenRepository.findByUserIdAndDeviceId(userId, deviceId);
+        Optional<DeviceToken> existingToken = deviceTokenRepository.findByUserIdAndDeviceId(userId,
+                request.getDeviceId());
 
         if (existingToken.isPresent()) {
             DeviceToken token = existingToken.get();
-            token.setFcmToken(fcmToken);
+            token.setFcmToken(request.getFcmToken());
             token.setIsActive(true);
-            token.setPlatform(platform);
+            token.setPlatform(request.getPlatform());
+            token.setDeviceModel(request.getDeviceModel());
+            token.setOsVersion(request.getOsVersion());
+            token.setAppVersion(request.getAppVersion());
+            token.setTimezone(request.getTimezone());
+            token.setLanguage(request.getLanguage());
             deviceTokenRepository.save(token);
-            log.info("Updated existing FCM token for device: {}", deviceId);
+            log.info("Updated existing FCM token for device: {}", request.getDeviceId());
         } else {
             // Check if this FCM token is already used by another record (and re-assign it)
-            deviceTokenRepository.findByFcmToken(fcmToken).ifPresent(deviceTokenRepository::delete);
+            deviceTokenRepository.findByFcmToken(request.getFcmToken()).ifPresent(deviceTokenRepository::delete);
 
             DeviceToken token = DeviceToken.builder()
                     .user(user)
-                    .fcmToken(fcmToken)
-                    .deviceId(deviceId)
-                    .platform(platform)
+                    .fcmToken(request.getFcmToken())
+                    .deviceId(request.getDeviceId())
+                    .platform(request.getPlatform())
+                    .deviceModel(request.getDeviceModel())
+                    .osVersion(request.getOsVersion())
+                    .appVersion(request.getAppVersion())
+                    .timezone(request.getTimezone())
+                    .language(request.getLanguage())
                     .isActive(true)
                     .build();
             deviceTokenRepository.save(token);
-            log.info("Registered new FCM token for device: {}", deviceId);
+            log.info("Registered new FCM token for device: {}", request.getDeviceId());
         }
     }
 

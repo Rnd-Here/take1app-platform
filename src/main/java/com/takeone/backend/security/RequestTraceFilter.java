@@ -28,8 +28,12 @@ public class RequestTraceFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
-        return path.startsWith("/actuator/") ||
+        return path.equals("/") ||
+                path.equals("/index.html") ||
+                path.equals("/favicon.ico") ||
+                path.startsWith("/actuator/") ||
                 path.startsWith("/swagger-ui/") ||
+                path.startsWith("/swagger-ui.html") ||
                 path.startsWith("/v3/api-docs");
     }
 

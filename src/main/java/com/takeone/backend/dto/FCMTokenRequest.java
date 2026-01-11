@@ -20,4 +20,14 @@ public class FCMTokenRequest {
 
     @NotBlank(message = "Platform is required")
     private String platform; // ANDROID, IOS
+
+    private String deviceModel;
+
+    private String osVersion;
+
+    private String appVersion;
+
+    private String timezone;
+
+    private String language;
 }

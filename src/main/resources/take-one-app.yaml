@@ -1,0 +1,148 @@
+openapi: 3.1.0
+info:
+  title: Take One App API
+  description: Backend API for Artist Portfolio and Social Platform
+  version: 1.0.0
+  contact:
+    name: Support
+    email: support@takeone.com
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+paths:
+  /api/auth/token:
+    post:
+      summary: Authenticate with Firebase token
+      description: Validates Firebase token, creates/updates user, and returns session token.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthRequest"
+      responses:
+        "200":
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Authentication failed
+  /api/auth/refresh:
+    post:
+      summary: Refresh session token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequest"
+      responses:
+        "200":
+          description: Token refreshed
+        "401":
+          description: Invalid refresh token
+  /api/auth/logout:
+    post:
+      summary: Logout current session
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logged out successfully
+  /api/user/profile:
+    get:
+      summary: Get user profile
+      tags:
+        - User Profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user profile
+  /api/notifications:
+    get:
+      summary: Get user notifications
+      tags:
+        - Notifications
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of notifications
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    AuthRequest:
+      type: object
+      required:
+        - idToken
+      properties:
+        idToken:
+          type: string
+          description: Firebase ID token
+    FCMTokenRequest:
+      type: object
+      required:
+        - fcmToken
+        - deviceId
+        - platform
+      properties:
+        fcmToken:
+          type: string
+        deviceId:
+          type: string
+        platform:
+          type: string
+        deviceModel:
+          type: string
+        osVersion:
+          type: string
+        appVersion:
+          type: string
+        timezone:
+          type: string
+        language:
+          type: string
+    AuthResponse:
+      type: object
+      properties:
+        sessionToken:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/UserResponse"
+        error:
+          type: string
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string

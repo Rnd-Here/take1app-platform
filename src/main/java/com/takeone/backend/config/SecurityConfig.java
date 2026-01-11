@@ -43,7 +43,9 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/ws-relay/**")
+                                "/ws-relay/**",
+                                "/",
+                                "/index.html")
                         .permitAll()
                         // 3. Everything else just needs a valid session/token
                         .anyRequest().authenticated())

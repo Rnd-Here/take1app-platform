@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "user_device_tokens", uniqueConstraints = {
         @UniqueConstraint(name = "uk_fcm_token", columnNames = "fcm_token"),
-        @UniqueConstraint(name = "uk_user_device", columnNames = {"user_id", "device_id"})
+        @UniqueConstraint(name = "uk_user_device", columnNames = { "user_id", "device_id" })
 })
 @DynamicUpdate // Efficient for toggling isActive flag
 public class DeviceToken {
@@ -41,7 +41,23 @@ public class DeviceToken {
     @Builder.Default
     private Boolean isActive = true;
 
+    @Column(name = "device_model")
+    private String deviceModel;
+
+    @Column(name = "os_version")
+    private String osVersion;
+
+    @Column(name = "app_version")
+    private String appVersion;
+
+    @Column(name = "timezone")
+    private String timezone;
+
+    @Column(name = "language")
+    private String language;
+
     @UpdateTimestamp
+
     @Column(name = "last_updated_at", nullable = false)
     private LocalDateTime lastUpdatedAt;
 }

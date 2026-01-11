@@ -37,9 +37,7 @@ public class NotificationController {
 
         deviceTokenService.registerToken(
                 currentUser.getId(),
-                request.getFcmToken(),
-                request.getDeviceId(),
-                request.getPlatform());
+                request);
 
         return ResponseEntity.ok().body(Map.of("message", "FCM token registered successfully"));
     }
