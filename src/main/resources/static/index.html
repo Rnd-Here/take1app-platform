@@ -3,509 +3,644 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Take One - Talent Management Platform</title>
+    <title>Take One - Professional Talent Management Platform</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary-yellow: #FFC107;
+            --primary-gold: #FFB300;
+            --dark-bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+            --text-muted: #a0a0a0;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
-            overflow-x: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text);
+            line-height: 1.6;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
+        .bg-gradient {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(255, 193, 7, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(255, 179, 0, 0.05) 0%, transparent 50%),
+                linear-gradient(180deg, #0a0a0a 0%, #000000 100%);
+            z-index: 0;
         }
+
+        .content { position: relative; z-index: 2; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
 
         /* Header */
-        header {
-            padding: 30px 0;
-            position: relative;
-            z-index: 100;
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        header { padding: 30px 0; border-bottom: 1px solid rgba(255, 193, 7, 0.1); }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
 
         .logo {
             font-size: 32px;
-            font-weight: 800;
-            letter-spacing: -1px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: var(--primary-yellow);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
-        .logo::before {
-            content: "🎬";
-            font-size: 36px;
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-yellow), var(--primary-gold));
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .api-docs-btn {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: #fff;
-            padding: 12px 28px;
-            border-radius: 50px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: repeating-linear-gradient(
+                90deg,
+                #000 0px,
+                #000 8px,
+                transparent 8px,
+                transparent 16px
+            );
+        }
+
+        .logo-icon::after {
+            content: '▶';
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            font-size: 14px;
+            color: #000;
+        }
+
+        nav { display: flex; gap: 40px; align-items: center; }
+        nav a {
+            color: var(--text-muted);
             text-decoration: none;
-            display: inline-block;
+            font-weight: 500;
+            font-size: 15px;
+            transition: color 0.3s;
         }
+        nav a:hover { color: var(--primary-yellow); }
 
-        .api-docs-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+        .cta-button {
+            background: var(--primary-yellow);
+            color: #000;
+            padding: 12px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(255, 193, 7, 0.3);
+        }
+        .cta-button:hover {
+            background: var(--primary-gold);
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 30px rgba(255, 193, 7, 0.5);
         }
 
-        /* Hero Section */
-        .hero {
-            text-align: center;
-            padding: 80px 0 60px;
-            animation: fadeInUp 0.8s ease;
-        }
-
+        /* Hero */
+        .hero { padding: 120px 0 80px; text-align: center; }
         .hero h1 {
-            font-size: 64px;
+            font-size: 72px;
             font-weight: 900;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             line-height: 1.1;
-            background: linear-gradient(to right, #fff, #f0f0f0);
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--primary-gold) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
-
         .hero p {
-            font-size: 22px;
-            margin-bottom: 40px;
-            opacity: 0.95;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
+            font-size: 20px;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 48px;
+            line-height: 1.7;
         }
 
-        .coming-soon {
-            display: inline-flex;
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .platform-badge {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            padding: 15px 30px;
-            border-radius: 50px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            font-weight: 600;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .platform-badge:nth-child(1) {
-            animation-delay: 0.2s;
-        }
-
-        .platform-badge:nth-child(2) {
-            animation-delay: 0.4s;
-        }
-
-        /* Features Section */
-        .features {
-            padding: 60px 0;
-        }
-
-        .features h2 {
-            text-align: center;
-            font-size: 48px;
-            margin-bottom: 60px;
-            font-weight: 800;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-        }
-
-        .feature-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 40px 30px;
-            transition: all 0.4s ease;
-            animation: fadeInUp 0.8s ease;
-            animation-fill-mode: both;
-        }
-
-        .feature-card:nth-child(1) { animation-delay: 0.1s; }
-        .feature-card:nth-child(2) { animation-delay: 0.2s; }
-        .feature-card:nth-child(3) { animation-delay: 0.3s; }
-        .feature-card:nth-child(4) { animation-delay: 0.4s; }
-        .feature-card:nth-child(5) { animation-delay: 0.5s; }
-        .feature-card:nth-child(6) { animation-delay: 0.6s; }
-
-        .feature-card:hover {
-            transform: translateY(-10px);
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .feature-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
+        .hero-stats { display: flex; justify-content: center; gap: 80px; margin-top: 60px; }
+        .stat { text-align: center; }
+        .stat-number {
+            font-size: 56px;
+            font-weight: 900;
+            color: var(--primary-yellow);
             display: block;
+            margin-bottom: 8px;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
         }
 
-        .feature-card h3 {
-            font-size: 24px;
-            margin-bottom: 15px;
-            font-weight: 700;
+        /* Sections */
+        .section {
+            padding: 100px 0;
+            border-bottom: 1px solid rgba(255, 193, 7, 0.05);
         }
 
-        .feature-card p {
-            font-size: 16px;
-            line-height: 1.6;
-            opacity: 0.9;
+        .section-header { text-align: center; margin-bottom: 60px; }
+        .section-header h2 {
+            font-size: 52px;
+            font-weight: 900;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+            color: var(--primary-yellow);
+        }
+        .section-header p {
+            font-size: 18px;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
         }
 
-        /* Architecture Flow */
-        .architecture {
-            padding: 80px 0;
-            text-align: center;
-        }
+        /* Grid Layouts */
+        .grid { display: grid; gap: 40px; }
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
 
-        .architecture h2 {
-            font-size: 48px;
-            margin-bottom: 60px;
-            font-weight: 800;
-        }
-
-        .flow-diagram {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 30px;
-            flex-wrap: wrap;
-            margin-bottom: 40px;
-        }
-
-        .flow-item {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 15px;
-            padding: 30px 40px;
-            font-weight: 600;
-            animation: slideIn 1s ease;
-            animation-fill-mode: both;
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 2px solid rgba(255, 193, 7, 0.1);
+            border-radius: 12px;
+            padding: 40px;
+            transition: all 0.3s;
             position: relative;
+            overflow: hidden;
         }
 
-        .flow-item:nth-child(1) { animation-delay: 0.2s; }
-        .flow-item:nth-child(2) { animation-delay: 0.4s; }
-        .flow-item:nth-child(3) { animation-delay: 0.6s; }
-        .flow-item:nth-child(4) { animation-delay: 0.8s; }
-        .flow-item:nth-child(5) { animation-delay: 1s; }
-
-        .flow-arrow {
-            font-size: 32px;
-            opacity: 0.7;
-            animation: bounce 1.5s ease-in-out infinite;
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-yellow), var(--primary-gold));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s;
         }
 
-        .flow-arrow:nth-child(even) {
-            animation-delay: 0.75s;
+        .card:hover::before {
+            transform: scaleX(1);
         }
 
-        /* Tech Stack */
-        .tech-stack {
-            padding: 60px 0;
-            background: rgba(0, 0, 0, 0.2);
+        .card:hover {
+            border-color: rgba(255, 193, 7, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(255, 193, 7, 0.15);
         }
 
-        .tech-grid {
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary-yellow), var(--primary-gold));
+            border-radius: 12px;
             display: flex;
+            align-items: center;
             justify-content: center;
-            gap: 40px;
-            flex-wrap: wrap;
-            margin-top: 40px;
+            font-size: 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(255, 193, 7, 0.3);
         }
 
-        .tech-badge {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            padding: 15px 30px;
-            border-radius: 50px;
+        .card h3 {
+            font-size: 22px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            color: var(--primary-yellow);
+        }
+        .card p {
+            font-size: 15px;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .card ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 16px;
+        }
+        .card li {
+            padding: 6px 0 6px 24px;
+            position: relative;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        .card li:before {
+            content: "▶";
+            position: absolute;
+            left: 0;
+            color: var(--primary-yellow);
+            font-size: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(255, 193, 7, 0.15);
+            color: var(--primary-yellow);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-top: 16px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .code-snippet {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 193, 7, 0.2);
+            border-left: 3px solid var(--primary-yellow);
+            border-radius: 6px;
+            padding: 12px 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: var(--primary-yellow);
+            margin-top: 12px;
+        }
+
+        /* Flow Diagram */
+        .flow { display: flex; justify-content: center; align-items: center; gap: 24px; flex-wrap: wrap; }
+        .flow-step {
+            background: var(--card-bg);
+            border: 2px solid rgba(255, 193, 7, 0.2);
+            border-radius: 10px;
+            padding: 24px 32px;
             font-weight: 600;
-            animation: fadeIn 1s ease;
-            animation-fill-mode: both;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .flow-step:hover {
+            border-color: var(--primary-yellow);
+            box-shadow: 0 4px 20px rgba(255, 193, 7, 0.2);
+        }
+        .flow-arrow {
+            color: var(--primary-yellow);
+            font-size: 24px;
+            font-weight: 900;
         }
 
-        .tech-badge:nth-child(1) { animation-delay: 0.1s; }
-        .tech-badge:nth-child(2) { animation-delay: 0.2s; }
-        .tech-badge:nth-child(3) { animation-delay: 0.3s; }
-        .tech-badge:nth-child(4) { animation-delay: 0.4s; }
-        .tech-badge:nth-child(5) { animation-delay: 0.5s; }
-        .tech-badge:nth-child(6) { animation-delay: 0.6s; }
+        /* Tech Badges */
+        .tech-grid { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-top: 40px; }
+        .tech-badge {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .tech-badge:hover {
+            background: rgba(255, 193, 7, 0.15);
+            border-color: var(--primary-yellow);
+        }
+
+        /* App Showcase */
+        .app-showcase {
+            padding: 80px 0;
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.05), rgba(255, 179, 0, 0.05));
+            border-top: 1px solid rgba(255, 193, 7, 0.1);
+            border-bottom: 1px solid rgba(255, 193, 7, 0.1);
+        }
+
+        .app-card-large {
+            background: var(--card-bg);
+            border: 2px solid rgba(255, 193, 7, 0.2);
+            border-radius: 16px;
+            padding: 50px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .app-card-large:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary-yellow);
+            box-shadow: 0 20px 60px rgba(255, 193, 7, 0.2);
+        }
+
+        .app-icon-large {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, var(--primary-yellow), var(--primary-gold));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            box-shadow: 0 8px 32px rgba(255, 193, 7, 0.4);
+        }
 
         /* Footer */
         footer {
+            padding: 80px 0 40px;
+            background: linear-gradient(180deg, transparent, rgba(255, 193, 7, 0.02));
+        }
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 60px;
+        }
+        .footer-links { display: flex; gap: 40px; }
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        .footer-links a:hover { color: var(--primary-yellow); }
+        .footer-bottom {
             text-align: center;
-            padding: 40px 0;
-            opacity: 0.8;
-        }
-
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.05);
-                opacity: 0.8;
-            }
-        }
-
-        @keyframes bounce {
-            0%, 100% {
-                transform: translateX(0);
-            }
-            50% {
-                transform: translateX(10px);
-            }
+            padding-top: 40px;
+            border-top: 1px solid rgba(255, 193, 7, 0.1);
+            color: var(--text-muted);
+            font-size: 14px;
         }
 
         /* Responsive */
+        @media (max-width: 1024px) {
+            .grid-3 { grid-template-columns: repeat(2, 1fr); }
+        }
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 42px;
-            }
-
-            .hero p {
-                font-size: 18px;
-            }
-
-            .features h2,
-            .architecture h2 {
-                font-size: 36px;
-            }
-
-            .coming-soon {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .flow-diagram {
-                flex-direction: column;
-            }
-
-            .flow-arrow {
-                transform: rotate(90deg);
-            }
-        }
-
-        /* Floating particles background effect */
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .particle {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            animation: float 15s infinite ease-in-out;
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0) translateX(0);
-            }
-            25% {
-                transform: translateY(-100px) translateX(50px);
-            }
-            50% {
-                transform: translateY(-200px) translateX(-50px);
-            }
-            75% {
-                transform: translateY(-100px) translateX(100px);
-            }
+            .container { padding: 0 24px; }
+            .header-content, nav { flex-direction: column; gap: 20px; }
+            .hero h1 { font-size: 48px; }
+            .hero-stats { flex-direction: column; gap: 40px; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .flow { flex-direction: column; }
+            .flow-arrow { transform: rotate(90deg); }
+            .footer-content, .footer-links { flex-direction: column; gap: 24px; text-align: center; }
         }
     </style>
 </head>
 <body>
-<!-- Animated Background Particles -->
-<div class="particles" id="particles"></div>
+<div class="bg-gradient"></div>
 
-<header>
-    <div class="container">
-        <div class="header-content">
-            <div class="logo">Take One</div>
-            <a href="/swagger-ui/index.html" class="api-docs-btn">📚 API Documentation</a>
+<div class="content">
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    TAKE ONE
+                </div>
+                <nav>
+                    <a href="#features">Features</a>
+                    <a href="#messaging">Messaging</a>
+                    <a href="#security">Security</a>
+                    <a href="/swagger-ui/index.html" class="cta-button">API Documentation</a>
+                </nav>
+            </div>
         </div>
-    </div>
-</header>
+    </header>
 
-<main>
     <section class="hero">
         <div class="container">
-            <h1>The Ultimate Talent Management Platform</h1>
-            <p>Where artists showcase their portfolios, scouts discover talent, and opportunities connect seamlessly</p>
+            <h1>Professional Talent<br/>Management Platform</h1>
+            <p>Where artists showcase portfolios, scouts discover talent, and opportunities connect through secure, end-to-end encrypted messaging. Built with Flutter for mobile and Spring Boot for backend.</p>
 
-            <div class="coming-soon">
-                <div class="platform-badge">📱 Android App Coming Soon</div>
-                <div class="platform-badge">🍎 iOS App Coming Soon</div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">E2EE</span>
+                    <span class="stat-label">Encrypted</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Real-Time</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Secure</span>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="features">
+    <section class="app-showcase">
         <div class="container">
-            <h2>Powerful Features</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <span class="feature-icon">🎨</span>
+            <div class="section-header">
+                <h2>Mobile Applications</h2>
+                <p>Built with Flutter for seamless cross-platform experience</p>
+            </div>
+            <div class="grid grid-2">
+                <div class="app-card-large">
+                    <div class="app-icon-large">📱</div>
+                    <h3 style="font-size: 28px; margin-bottom: 16px;">Android App</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 20px;">Native Flutter experience optimized for Android devices with Material Design principles</p>
+                    <div class="status-badge">IN DEVELOPMENT</div>
+                </div>
+                <div class="app-card-large">
+                    <div class="app-icon-large">🍎</div>
+                    <h3 style="font-size: 28px; margin-bottom: 16px;">iOS App</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 20px;">Native Flutter experience optimized for iOS devices with Cupertino design language</p>
+                    <div class="status-badge">IN DEVELOPMENT</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Enterprise Features</h2>
+                <p>Professional-grade tools for the entertainment industry</p>
+            </div>
+            <div class="grid grid-3">
+                <div class="card">
+                    <div class="card-icon">🎨</div>
                     <h3>Artist Portfolios</h3>
-                    <p>Create stunning visual portfolios to showcase your talent. Post photos, videos, and achievements that tell your story.</p>
+                    <p>High-resolution galleries with achievement tracking and customizable profiles for showcasing talent.</p>
                 </div>
-
-                <div class="feature-card">
-                    <span class="feature-icon">💼</span>
-                    <h3>Job Postings</h3>
-                    <p>LinkedIn-style job board connecting artists with opportunities. Post gigs, auditions, and long-term roles.</p>
+                <div class="card">
+                    <div class="card-icon">💼</div>
+                    <h3>Job Marketplace</h3>
+                    <p>LinkedIn-style board for casting calls, auditions, and opportunities with advanced filtering and matching.</p>
                 </div>
-
-                <div class="feature-card">
-                    <span class="feature-icon">🔒</span>
-                    <h3>End-to-End Encryption</h3>
-                    <p>WhatsApp-level security for all communications. Your messages are encrypted and never read by our servers.</p>
+                <div class="card">
+                    <div class="card-icon">🔔</div>
+                    <h3>Smart Notifications</h3>
+                    <p>FCM with device metadata tracking for personalized, localized push notifications across all devices.</p>
                 </div>
-
-                <div class="feature-card">
-                    <span class="feature-icon">⚡</span>
-                    <h3>Real-Time Messaging</h3>
-                    <p>WebSocket-powered instant messaging with presence tracking, delivery receipts, and offline message storage.</p>
+                <div class="card">
+                    <div class="card-icon">📊</div>
+                    <h3>Observability</h3>
+                    <p>Prometheus, Grafana, and Loki integration for real-time monitoring and performance analytics.</p>
                 </div>
-
-                <div class="feature-card">
-                    <span class="feature-icon">🔔</span>
-                    <h3>Push Notifications</h3>
-                    <p>Never miss an opportunity. Multi-device FCM notifications keep you connected across all your devices.</p>
-                </div>
-
-                <div class="feature-card">
-                    <span class="feature-icon">🔍</span>
+                <div class="card">
+                    <div class="card-icon">🔍</div>
                     <h3>Scout Discovery</h3>
-                    <p>Talent scouts can discover artists, filter by skills, and reach out directly for casting opportunities.</p>
+                    <p>Advanced search and filtering for talent discovery based on skills, experience, and availability.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🛡️</div>
+                    <h3>PII Protection</h3>
+                    <p>Automatic masking of sensitive data in logs with custom Logback implementation and compliance.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="architecture">
+    <section class="section" id="messaging">
         <div class="container">
-            <h2>Application Architecture</h2>
-            <div class="flow-diagram">
-                <div class="flow-item">📱 Mobile Apps<br/>(Android/iOS)</div>
-                <div class="flow-arrow">→</div>
-                <div class="flow-item">🌐 Nginx<br/>(SSL/TLS)</div>
-                <div class="flow-arrow">→</div>
-                <div class="flow-item">🚀 Spring Boot<br/>API</div>
-                <div class="flow-arrow">→</div>
-                <div class="flow-item">🗄️ MySQL<br/>+ Redis</div>
-                <div class="flow-arrow">→</div>
-                <div class="flow-item">📊 Monitoring<br/>(Grafana)</div>
+            <div class="section-header">
+                <h2>WhatsApp-Style Messaging</h2>
+                <p>End-to-end encrypted store-and-forward relay</p>
+            </div>
+            <div class="grid grid-2">
+                <div class="card">
+                    <h3>Core Capabilities</h3>
+                    <ul>
+                        <li>WebSocket relay at /ws-relay</li>
+                        <li>Client-side encryption only</li>
+                        <li>Redis presence tracking</li>
+                        <li>MySQL offline storage</li>
+                        <li>Delivery acknowledgment</li>
+                        <li>FCM push notifications</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>Reliability Features</h3>
+                    <ul>
+                        <li>Durable pending_messages table</li>
+                        <li>Automatic reconnection sync</li>
+                        <li>Multi-device support</li>
+                        <li>Last seen timestamps</li>
+                        <li>Message purge after ACK</li>
+                        <li>Session-based auth</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="tech-stack">
+    <section class="section" id="security">
         <div class="container">
-            <h2>Built With Modern Technology</h2>
+            <div class="section-header">
+                <h2>Security & Traceability</h2>
+                <p>Enterprise-grade security with comprehensive audit trails</p>
+            </div>
+            <div class="grid grid-3">
+                <div class="card">
+                    <h3>🔒 Authentication</h3>
+                    <p>Firebase Admin SDK with session management</p>
+                    <div class="code-snippet">Authorization: Bearer &lt;token&gt;</div>
+                    <div class="code-snippet">X-Session-Token: &lt;token&gt;</div>
+                </div>
+                <div class="card">
+                    <h3>🔍 Trace ID</h3>
+                    <p>Mandatory UUID for request tracing</p>
+                    <div class="code-snippet">X-Trace-Id: &lt;uuid&gt;</div>
+                    <p style="margin-top: 12px; font-size: 13px; color: var(--text-muted);">System-wide observability</p>
+                </div>
+                <div class="card">
+                    <h3>🛡️ WebSocket Security</h3>
+                    <p>Token validation on handshake</p>
+                    <div class="code-snippet">/ws-relay?token=&lt;token&gt;</div>
+                    <p style="margin-top: 12px; font-size: 13px; color: var(--text-muted);">Stateless validation</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Technical Architecture</h2>
+                <p>Spring Boot 3.4 with enterprise infrastructure</p>
+            </div>
+            <div class="flow">
+                <div class="flow-step">Flutter<br/>Mobile Apps</div>
+                <div class="flow-arrow">▶</div>
+                <div class="flow-step">Nginx<br/>SSL/TLS</div>
+                <div class="flow-arrow">▶</div>
+                <div class="flow-step">Spring Boot<br/>WebSocket + REST</div>
+                <div class="flow-arrow">▶</div>
+                <div class="flow-step">MySQL<br/>+ Redis</div>
+                <div class="flow-arrow">▶</div>
+                <div class="flow-step">Observability<br/>Stack</div>
+            </div>
+
             <div class="tech-grid">
-                <div class="tech-badge">☕ Spring Boot 3.4</div>
-                <div class="tech-badge">🔐 Firebase Auth</div>
-                <div class="tech-badge">🔌 WebSockets</div>
-                <div class="tech-badge">🗄️ MySQL + Redis</div>
-                <div class="tech-badge">📊 Prometheus</div>
-                <div class="tech-badge">🐳 Docker</div>
+                <div class="tech-badge">Flutter</div>
+                <div class="tech-badge">Spring Boot 3.4</div>
+                <div class="tech-badge">SpringDoc OpenAPI</div>
+                <div class="tech-badge">Firebase</div>
+                <div class="tech-badge">WebSocket</div>
+                <div class="tech-badge">MySQL 8.0</div>
+                <div class="tech-badge">Redis</div>
+                <div class="tech-badge">Prometheus</div>
+                <div class="tech-badge">Grafana</div>
+                <div class="tech-badge">Loki</div>
+                <div class="tech-badge">Splunk</div>
+                <div class="tech-badge">Docker</div>
             </div>
         </div>
     </section>
-</main>
 
-<footer>
-    <div class="container">
-        <p>&copy; 2025 Take One. All rights reserved. | <a href="v3/api-docs" style="color: #fff; text-decoration: underline;">API Docs</a></p>
-    </div>
-</footer>
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2>API Documentation</h2>
+                <p>Fully documented with OpenAPI 3.1.0</p>
+            </div>
+            <div class="grid grid-3">
+                <div class="card">
+                    <h3>📘 Swagger UI</h3>
+                    <p>Interactive API testing</p>
+                    <a href="/swagger-ui/index.html" style="color: var(--primary-yellow); margin-top: 12px; display: inline-block; font-weight: 600;">Explore API →</a>
+                </div>
+                <div class="card">
+                    <h3>📄 OpenAPI JSON</h3>
+                    <p>Complete specification</p>
+                    <a href="/v3/api-docs" style="color: var(--primary-yellow); margin-top: 12px; display: inline-block; font-weight: 600;">View Docs →</a>
+                </div>
+                <div class="card">
+                    <h3>📊 Metrics</h3>
+                    <p>Prometheus endpoint</p>
+                    <a href="/actuator/prometheus" style="color: var(--primary-yellow); margin-top: 12px; display: inline-block; font-weight: 600;">View Metrics →</a>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<script>
-    // Create floating particles
-    const particlesContainer = document.getElementById('particles');
-    for (let i = 0; i < 20; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        particle.style.width = Math.random() * 10 + 5 + 'px';
-        particle.style.height = particle.style.width;
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.top = Math.random() * 100 + '%';
-        particle.style.animationDelay = Math.random() * 10 + 's';
-        particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
-        particlesContainer.appendChild(particle);
-    }
-</script>
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    TAKE ONE
+                </div>
+                <div class="footer-links">
+                    <a href="/swagger-ui/index.html">Swagger UI</a>
+                    <a href="/v3/api-docs">API Docs</a>
+                    <a href="/actuator/prometheus">Metrics</a>
+                    <a href="#features">Features</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Take One Platform. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</div>
 </body>
 </html>

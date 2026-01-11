@@ -1,15 +1,29 @@
 # Take One Backend Application
 
-This is the backend Spring Boot application for the Take One platform. It provides authentication (via Firebase), creator profile management, and a secure, end-to-end encrypted messaging relay with push notification support.
+This is the backend Spring Boot application for the **Take One** platform—a talent management system where artists showcase their portfolios, scouts discover talent, and opportunities connect through secure, end-to-end encrypted messaging.
+
+## 🚀 Welcome to Take One
+Visit the [Landing Page](http://localhost:8080/) for a visual tour of the platform features, architecture flow, and tech stack.
 
 ## 🛠 Technology Stack
 - **Framework**: Spring Boot 3.4.13
+- **API Documentation**: [SpringDoc OpenAPI 2.x](https://springdoc.org/) (Swagger UI)
 - **Security**: Spring Security + Firebase Admin SDK
-- **Real-time**: Spring WebSockets
+- **Real-time**: Spring WebSockets (E2EE Relay)
 - **Database**: MySQL 8.0 (Managed via Flyway)
 - **Presence & Cache**: Redis
-- **Observability**: Prometheus, Grafana, Splunk HEC
+- **Observability**: Prometheus, Grafana, Loki, Splunk HEC
 - **PII Protection**: Custom Logback Masking + Lombok Exclusions
+
+## 📚 API Documentation
+The API is fully documented using OpenAPI 3.1.0 standards. You can interact with the endpoints directly via Swagger UI.
+
+- **Swagger UI**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- **OpenAPI Docs (JSON)**: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+- **Contract Definition**: [take-one-app.yaml](file:///e:/Work/Spring%20Boot/take-one-app-backend/src/main/resources/take-one-app.yaml)
+
+> [!TIP]
+> Use the "Authorize" button in Swagger UI to provide your Bearer Token for testing secured endpoints.
 
 ## 💬 E2E Messaging Service
 The platform implements a **WhatsApp-style Store-and-Forward** messaging relay.
@@ -19,15 +33,27 @@ The platform implements a **WhatsApp-style Store-and-Forward** messaging relay.
 - **Push Fallback**: Integrated FCM notifies offline users of new messages.
 - **Reliability**: Messages are only purged from the relay database after a `DELIVERY_ACK` is received from the recipient's device.
 
-## 🔔 Push Notifications
-FCM (Firebase Cloud Messaging) integration supports multi-device delivery:
-- **Device Tokens**: Each login session optionally registers an FCM token via `POST /api/notifications/fcm-token`.
-- **Lifecycle Management**: Tokens are automatically deactivated on logout/session invalidation to prevent privacy leaks.
-- **Targeted Messaging**: Supports both individual device and user-wide (all devices) notification broadcasts.
+## 🔔 Enhanced Push Notifications
+FCM (Firebase Cloud Messaging) integration supports intelligent multi-device delivery.
 
-## 🚀 Quick Start with Docker
+### Device Metadata Tracking
+When registering an FCM token via `POST /api/notifications/fcm-token`, the system now gathers rich device metadata:
+- **Device Model** (e.g., iPhone 15 Pro, Samsung S24)
+- **OS Version** (e.g., iOS 17.5, Android 14)
+- **App Version** (e.g., v1.0.4)
+- **Timezone & Language**: For localized and appropriately timed notifications.
 
-The easiest way to run the application is using Docker. This will spin up the API, MySQL database, and Redis cache automatically.
+## 🔒 Security & Traceability
+### Mandatory Trace ID
+Every business API request must include a unique transaction identifier in the header for system-wide observability.
+- **Header**: `X-Trace-Id`
+- **Value**: Any UUID string.
+- **Exceptions**: The home page, Swagger UI, API docs, and actuator endpoints do **not** require this header.
+
+### Session Authentication
+Authentication is session-based, validated via `Authorization: Bearer <token>` or `X-Session-Token` headers. The `SessionAuthenticationFilter` ensures stateless validation against high-performance Redis/MySQL storage.
+
+## 🚀 Running Locally with Docker
 
 ### Prerequisites
 - **Docker** and **Docker Compose** installed.
@@ -44,6 +70,7 @@ FIREBASE_CONFIG_BASE64=<your_base64_string_here>
 SPLUNK_URL=http://your-splunk-instance:8088/services/collector/event
 SPLUNK_TOKEN=your-hec-token
 SPLUNK_INDEX=main
+GRAFANA_LOKI_TOKEN=<your_loki_token>
 ```
 
 ### 2. Run the Application
@@ -89,3 +116,10 @@ Logs are sent asynchronously to Splunk via HTTP Event Collector (HEC).
 Deployment is automated via GitHub Actions to your VPS. 
 - **CI/CD**: Pushes to `main` trigger a build, package (GHCR), and deploy (SSH) cycle.
 - **Session Cleanup**: A background scheduler runs daily at 3 AM to deactivate expired sessions and hard-delete records older than 60 days.
+
+## 📊 Monitoring
+- **Metrics**: `http://localhost:8080/actuator/prometheus`
+- **Logs**: Asynchronous delivery to **Splunk** and **Grafana Loki** with automatic PII masking.
+
+---
+&copy; 2026 Take One Platform. All rights reserved.
